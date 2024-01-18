@@ -10,21 +10,12 @@ import {hash} from 'bcryptjs';
 export class UsersService {
     constructor(@InjectModel(Users.name) private usersModel: Model<Users>) {}
 
-    // async create(createUsersDto: CreateUsersDto): Promise<Users> {
-    //   const createdUsers = new this.usersModel(createUsersDto);
-    //   return createdUsers.save();
-    // }
-  
-    // async findAll(): Promise<Users[]> {
-    //   return this.usersModel.find().exec();
-    // }
-
     async create(createUsersDto: CreateUsersDto): Promise<Users> {
         const { username, password } = createUsersDto;
 
         // Check if a user with the same username already exists
         const existingUser = await this.usersModel.findOne({ username }).exec();
-
+        
         if (existingUser) {
             throw new ConflictException('Username already exists');
         }
@@ -47,16 +38,42 @@ export class UsersService {
         return users;
     }
 
-    findOne(id: number) {
-        return `This action returns a #${id} users`;
+    async findOne(username: string): Promise<Users> {
+        const user = await this.usersModel.findOne({username}).exec();
+        
+        if (!user) {
+            throw new NotFoundException(`User #${username} not found`);
+        }
+
+        return user;
     }
 
-    update(id: number, updateUsersDto: UpdateUsersDto) {
-        return `This action updates a #${id} users`;
+    async update(username: string, updateUsersDto: UpdateUsersDto): Promise<Users> {
+        const existingUser = await this.usersModel.findOne({username: updateUsersDto.username}).exec();
+        if (existingUser) {
+            throw new ConflictException(`User #${updateUsersDto.username} already exists`);
+        }
+
+        const hashedPassword = await hash(updateUsersDto.password, 10);
+    
+        updateUsersDto.password = hashedPassword;
+
+        const user = await this.usersModel.findOneAndUpdate({username}, updateUsersDto, {new: true});
+        if (!user) {
+            throw new NotFoundException(`User #${username} not found`)
+        }
+
+        return user;
     }
 
-    remove(id: number) {
-        return `This action removes a #${id} users`;
+    async remove(username: string) {
+        const user = await this.usersModel.findOneAndDelete({username});
+
+        if (!user) {
+            throw new NotFoundException(`User #${username} not found`);
+        }
+
+        return user;
     }
 }
   

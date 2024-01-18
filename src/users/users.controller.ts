@@ -10,6 +10,8 @@ export class UsersController {
 
     @Post()
     async create(@Res() response, @Body() createUsersDto: CreateUsersDto) {
+        console.log(createUsersDto);
+        
         try {
             const newUser = await this.usersService.create(createUsersDto);
             return response.status(HttpStatus.CREATED).json({
@@ -19,14 +21,16 @@ export class UsersController {
                 }
             });
         } catch (err) {
-            const status = err.response.statusCode;
-            const message = err.response.message;
-            const error = err.response.err;
-
-            return response.status(status ?? HttpStatus.BAD_REQUEST).json({
-            statusCode: status ?? 400,
-            message: message ?? err,
-            error: error ?? 'Bad Request'
+            console.error('Error:', err);
+    
+            const status = err?.response?.statusCode || HttpStatus.BAD_REQUEST;
+            const message = err?.response?.message || err;
+            const error = err?.response?.error || 'Bad Request';
+        
+            return response.status(status).json({
+                statusCode: status,
+                message,
+                error
             });
         }
     }
@@ -41,22 +45,49 @@ export class UsersController {
                 data
             });
         } catch (error) {
-            
+            return response.status(error.status).json(error.response);
         }
     }
 
-    @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.usersService.findOne(+id);
+    @Get(':username')
+    async findOne(@Res() response, @Param('username') username: string) {
+        try {
+            const user = await this.usersService.findOne(username);
+            console.log('user', user);
+            
+            return response.status(HttpStatus.OK).json({
+                message: "User found successfully",
+                data: user
+            })
+        } catch (error) {
+            return response.status(error.status).json(error.response);
+        }
     }
 
-    @Patch(':id')
-    update(@Param('id') id: string, @Body() updateUsersDto: UpdateUsersDto) {
-        return this.usersService.update(+id, updateUsersDto);
+    @Patch(':username')
+    async update(@Res() response, @Param('username') username: string, @Body() updateUsersDto: UpdateUsersDto) {
+        try {
+            const user = await this.usersService.update(username, updateUsersDto);
+            
+            return response.status(HttpStatus.OK).json({
+                message: "User has been successfully updated",
+                data: user
+            })
+        } catch (error) {
+            return response.status(error.status).json(error.response);
+        }
     }
 
-    @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.usersService.remove(+id);
+    @Delete(':username')
+    async remove(@Res() response, @Param('username') username: string) {
+        try {
+            const deletedUser = await this.usersService.remove(username);
+
+            return response.status(HttpStatus.OK).json({
+                message: "User deleted successfully"
+            })
+        } catch (error) {
+            return response.status(error.status).json(error.response);
+        }
     }
 }
