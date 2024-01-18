@@ -5,10 +5,23 @@ import { Model } from 'mongoose';
 import { CreateUsersDto } from './dto/create-users.dto';
 import { UpdateUsersDto } from './dto/update-users.dto';
 import {hash} from 'bcryptjs';
+// export type User = any;
 
 @Injectable()
 export class UsersService {
     constructor(@InjectModel(Users.name) private usersModel: Model<Users>) {}
+    // private readonly users = [
+    //     {
+    //       userId: 1,
+    //       username: 'john',
+    //       password: 'changeme',
+    //     },
+    //     {
+    //       userId: 2,
+    //       username: 'maria',
+    //       password: 'guess',
+    //     },
+    // ];
 
     async create(createUsersDto: CreateUsersDto): Promise<Users> {
         const { username, password } = createUsersDto;
@@ -47,6 +60,10 @@ export class UsersService {
 
         return user;
     }
+
+    // async findOne(username: string): Promise<User | undefined> {
+    //     return this.users.find(user => user.username === username);
+    // }
 
     async update(username: string, updateUsersDto: UpdateUsersDto): Promise<Users> {
         const existingUser = await this.usersModel.findOne({username: updateUsersDto.username}).exec();
